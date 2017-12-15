@@ -1,0 +1,69 @@
+build: &build
+  # parallelism: 3
+  steps:
+    - checkout
+    # Restore bundle cache
+    - type: cache-restore
+      name: Restore bundle cache
+      key: chef-bundle-{{ checksum "Gemfile.lock" }}
+    - run:
+        name: Bundle Install
+        command: bundle install --path vendor/bundle --without ci docgen guard integration maintenance omnibus_package --frozen
+    - type: cache-save
+      name: Save bundle cache
+      key: chef-bundle-{{ checksum "Gemfile.lock" }}
+      paths:
+        - vendor/bundle
+    - type: shell
+      command: |
+        mkdir test_results
+        sudo -E $(which bundle) exec rspec --profile 10 \
+                          --format RspecJunitFormatter \
+                          --out test_results/rspec.xml \
+                          --format progress \
+                          $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
+    # Save test results for timing analysis
+    - store_test_results:
+        path: test_results
+
+version: 2
+jobs:
+  ruby_2_3:
+    <<: *build
+    docker:
+      - image: circleci/ruby:2.3
+  ruby_2_4:
+    <<: *build
+    docker:
+      - image: circleci/ruby:2.4
+  ruby_2_5:
+    <<: *build
+    docker:
+      - image: circleci/ruby:2.5.0-preview1
+  chefstyle:
+    steps:
+      - checkout
+      # Restore bundle cache
+      - type: cache-restore
+        name: Restore bundle cache
+        key: chef-chefstyle-bundle-{{ checksum "Gemfile.lock" }}
+      - run:
+          name: Bundle Install
+          command: bundle install --path vendor/bundle --without ci docgen guard integration maintenance omnibus_package --frozen
+      - type: cache-save
+        name: Save bundle cache
+        key: chef-chefstyle-bundle-{{ checksum "Gemfile.lock" }}
+        paths:
+          - vendor/bundle
+      - run:
+        name: ChefStyle
+        command: bundle exec rake style
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      ruby_2_3
+      ruby_2_4
+      ruby_2_5
+      chefstyle
