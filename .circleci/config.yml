@@ -1,5 +1,5 @@
 build: &build
-  # parallelism: 3
+  parallelism: 3
   steps:
     - checkout
     # Restore bundle cache
@@ -17,11 +17,11 @@ build: &build
     - type: shell
       command: |
         mkdir test_results
-        sudo -E $(which bundle) exec rspec --profile 10 \
+        sudo -E $(which bundle) exec rake spec --profile 10 \
                           --format RspecJunitFormatter \
                           --out test_results/rspec.xml \
                           --format progress \
-                          $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
+                          # $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
     # Save test results for timing analysis
     - store_test_results:
         path: test_results
