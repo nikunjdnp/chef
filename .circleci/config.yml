@@ -41,6 +41,8 @@ jobs:
     docker:
       - image: circleci/ruby:2.5.0-preview1
   chefstyle:
+    docker:
+      - image: circleci/ruby:2.4
     steps:
       - checkout
       # Restore bundle cache
