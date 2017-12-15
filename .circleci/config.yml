@@ -58,8 +58,8 @@ jobs:
         paths:
           - vendor/bundle
       - run:
-        name: ChefStyle
-        command: bundle exec rake style
+          name: ChefStyle
+          command: bundle exec rake style
 workflows:
   version: 2
   test:
